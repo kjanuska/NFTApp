@@ -1,10 +1,9 @@
 import './app.jsx';
 import './index.css';
 
-const button = document.getElementById("testBtn");
+const button = document.getElementById("submitBtn");
 
 button.onclick = () => {
-    button.classList.toggle('clicked');
-
-    window.nftapp.testCall();
+    const addressField = document.getElementById("addressField");
+    // button.classList.toggle('clicked');
 };

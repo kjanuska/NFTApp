@@ -2,7 +2,7 @@ const axios = require('axios')
 
 // https://docs.opensea.io/reference/retrieving-asset-events
 
-async function getActivity(event_type) {
+async function getActivity(address, event_type=null) {
   try {
     var resp = await axios.get(
       "https://api.opensea.io/api/v1/events",
@@ -11,13 +11,13 @@ async function getActivity(event_type) {
         "accept" : "application/json",
         },
         params: {
-          account_address: '0xd77220D15cB1F3A69d54Ae3bF6497D54510f08Bf',
+          account_address: address,
           event_type: event_type,
           only_opensea: 'false',
           offset: '0',
           limit: '20',
         }
-      },      
+      },
     );
   } catch (error) {
     console.log(error);
