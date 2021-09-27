@@ -26,4 +26,5 @@ async function getActivity(address, event_type=null) {
   return resp.data;
 }
 
+
 module.exports = { getActivity };

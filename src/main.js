@@ -54,7 +54,6 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.on("submitAddress", (event, address) => {
-  console.log('test');
-  resp = getActivity('successful', address);
+ipcMain.handle("submit-address", (event, address) => {
+  return getActivity(address);
 });

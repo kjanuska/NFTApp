@@ -1,8 +1,9 @@
 const { ipcRenderer, contextBridge } = require("electron");
 
-contextBridge.exposeInMainWorld(
-  'nftapp',
-  {
-    submitAddress: (address) => ipcRenderer.send('submitAddress', address)
+contextBridge.exposeInMainWorld('nftapp', {
+  openseaAPI: {
+    submitAddress(address) {
+      ipcRenderer.invoke('submit-address', address);
+    }
   }
-)
+})

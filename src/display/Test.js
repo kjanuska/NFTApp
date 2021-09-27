@@ -15,19 +15,21 @@ class Test extends React.Component {
   }
 
   submitAddress = (event) => {
-    event.preventDefault();
-    this.setState({text: this.state.address});
+    nftapp.openseaAPI.submitAddress(this.state.address);
+    this.setState({
+      text: this.state.address,
+    });
   }
+
 
   render() {
     return (
       <div>
-        <form onSubmit={this.submitAddress}>
           <h2>Type your address</h2>
           <input id="addressField" type="text" onChange={this.updateAddress}></input>
-          <input id="submitBtn" type="submit" value="Submit"></input>
-        </form>
+          <div className="button" onClick={this.submitAddress}>Submit</div>
         <h2>Your address: {this.state.text}</h2>
+        <p id="response"></p>
       </div>
     );
   }
