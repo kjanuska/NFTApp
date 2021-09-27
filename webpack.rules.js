@@ -1,4 +1,19 @@
 module.exports = [
+  {
+    resolve: {
+      fallback: {
+        "fs": false,
+        "tls": false,
+        "net": false,
+        "path": false,
+        "zlib": false,
+        "http": false,
+        "https": false,
+        "stream": false,
+        "crypto": false,
+      }
+    }
+  },
   // Add support for native node modules
   {
     // We're specifying native_modules in the test because the asset relocator loader generates a

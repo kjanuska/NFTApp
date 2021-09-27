@@ -26,7 +26,7 @@ class Test extends React.Component {
     return (
       <div>
           <h2>Type your address</h2>
-          <input id="addressField" type="text" onChange={this.updateAddress}></input>
+          <input type="text" onChange={this.updateAddress}></input>
           <div className="button" onClick={this.submitAddress}>Submit</div>
         <h2>Your address: {this.state.text}</h2>
         <p id="response"></p>

@@ -10,13 +10,14 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     backgroundColor: "#228A9E",
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     }
   });
@@ -30,6 +31,8 @@ const createWindow = () => {
   });
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  mainWindow.removeMenu();
 };
 
 // This method will be called when Electron has finished
@@ -54,6 +57,7 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.handle("submit-address", (event, address) => {
-  return getActivity(address);
+ipcMain.on("submit-address", async (event, address) => {
+  const resp = await getActivity(address);
+  mainWindow.webContents.send('from-main', resp);
 });
