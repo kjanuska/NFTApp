@@ -1,6 +1,17 @@
 const { app, ipcMain, BrowserWindow } = require('electron');
 const path = require('path');
 
+// module for storing data
+const Store = require('electron-store');
+const schema = {
+  address: {
+    type: 'string',
+    default: '',
+  }
+}
+const store = new Store({schema});
+
+// custom node modules for scraping
 const { getActivity } = require('./opensea/activity');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -58,6 +69,15 @@ app.on('activate', () => {
 });
 
 ipcMain.on("submit-address", async (event, address) => {
-  const resp = await getActivity(address);
-  mainWindow.webContents.send('from-main', resp);
+  store.set('address', address);
+  // const resp = await getActivity(address);
+  // mainWindow.webContents.send('from-main', resp);
 });
+
+ipcMain.handle('get-address', async (event) => {
+  return await loadAddress();
+});
+
+const loadAddress = async () => {
+  return store.get('address');
+}

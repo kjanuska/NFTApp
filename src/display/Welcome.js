@@ -1,26 +1,26 @@
 import React from "react";
 
 // create a React component that will be rendered later
-class Test extends React.Component {
+class Welcome extends React.Component {
   constructor(props) {
+
     super(props);
     this.state = {
-      address: '',
-      text: '',
+      address: this.props.address,
+      temp: '',
     };
   }
 
   updateAddress = (event) => {
-    this.setState({address: event.target.value});
+    this.setState({temp: event.target.value});
   }
 
   submitAddress = (event) => {
-    nftapp.openseaAPI.submitAddress(this.state.address);
     this.setState({
-      text: this.state.address,
+      address: this.state.temp,
     });
+    nftapp.openseaAPI.submitAddress(this.state.temp);
   }
-
 
   render() {
     return (
@@ -28,11 +28,13 @@ class Test extends React.Component {
           <h2>Type your address</h2>
           <input type="text" onChange={this.updateAddress}></input>
           <div className="button" onClick={this.submitAddress}>Submit</div>
-        <h2>Your address: {this.state.text}</h2>
+          <UserAddress address={this.state.address} />
         <p id="response"></p>
       </div>
     );
   }
 }
 
-export default Test;
+const UserAddress = ({address}) => <h2>Your address: {address}</h2>;
+
+export default Welcome;

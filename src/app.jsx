@@ -2,7 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 // import Test class from file
-import Test from './display/Test'
+import Welcome from './display/Welcome'
 
-// get the html code from the Test file and render that
-ReactDOM.render(<Test />, document.body);
+(async () => {
+    const address = await window.nftapp.settings.getAddress;
+    ReactDOM.render(<Welcome address={address} />, document.body);
+  })();
