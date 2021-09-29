@@ -24,6 +24,8 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth: 1000,
+    minHeight: 700,
     backgroundColor: "#228A9E",
     show: false,
     webPreferences: {

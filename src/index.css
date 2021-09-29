@@ -10,14 +10,48 @@ body {
   background: #228a9e;
 }
 
+.welcome {
+  margin: 0;
+  width: 600px;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+input[type=text] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  height:40px;
+  font-size:18pt;
+  color: aliceblue;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid #006a7e;
+  text-align: center;
+  width: 100%;
+}
+
+input[type=text]:focus {
+  outline: none;
+}
+
 .button {
   border-radius: 50px;
   background: #228a9e;
   box-shadow: 20px 20px 60px #1d7586, -20px -20px 60px #279fb6;
-  width: 70px;
+  width: 100px;
   height: 70px;
+  margin-top: 50px;
+  margin-bottom: 50px;
   border-radius: 15px;
   text-align: center;
+  position: relative;
+  left: 50%;
+  -ms-transform: translate(-50%);
+  transform: translate(-50%);
   line-height: 70px;
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */

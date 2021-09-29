@@ -24,7 +24,7 @@ class Welcome extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="welcome">
           <h2>Type your address</h2>
           <input type="text" onChange={this.updateAddress}></input>
           <div className="button" onClick={this.submitAddress}>Submit</div>
