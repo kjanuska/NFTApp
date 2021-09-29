@@ -28,13 +28,10 @@ class Welcome extends React.Component {
           <h2>Type your address</h2>
           <input type="text" onChange={this.updateAddress}></input>
           <div className="button" onClick={this.submitAddress}>Submit</div>
-          <UserAddress address={this.state.address} />
         <p id="response"></p>
       </div>
     );
   }
 }
-
-const UserAddress = ({address}) => <h2>Your address: {address}</h2>;
 
 export default Welcome;

@@ -1,10 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-// import Test class from file
 import Welcome from './display/Welcome'
+import Main from './display/Main'
 
 (async () => {
     const address = await window.nftapp.settings.getAddress;
-    ReactDOM.render(<Welcome address={address} />, document.body);
+    if (address !== '')
+    {
+      ReactDOM.render(<Main address={address} />, document.body);
+    } else 
+    {
+      console.log("null address");
+      ReactDOM.render(<Welcome />, document.body);
+    }
+
   })();

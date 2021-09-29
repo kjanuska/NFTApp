@@ -7,11 +7,13 @@ body {
   width: 100vw;
   height: 100vh;
   margin: 0;
+  margin-left: 100px;
   background: #228a9e;
 }
 
 .welcome {
   margin: 0;
+  margin-left: 100px;
   width: 600px;
   position: absolute;
   text-align: center;
@@ -19,6 +21,30 @@ body {
   left: 50%;
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
+}
+
+.sidebar {
+  height: 100%;
+  width: 100px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.sidebar a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+}
+
+.sidebar a:hover {
+  color: #f1f1f1;
 }
 
 input[type=text] {

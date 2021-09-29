@@ -72,14 +72,14 @@ app.on('activate', () => {
 
 ipcMain.on("submit-address", async (event, address) => {
   store.set('address', address);
-  // const resp = await getActivity(address);
-  // mainWindow.webContents.send('from-main', resp);
 });
 
 ipcMain.handle('get-address', async (event) => {
-  return await loadAddress();
+  return store.get('address');
 });
 
-const loadAddress = async () => {
-  return store.get('address');
-}
+ipcMain.on('fetch-data', async (event, address) => {
+  const resp = await getActivity(address);
+  console.log(resp);
+  mainWindow.webContents.send('from-main', resp);
+});
