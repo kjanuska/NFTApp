@@ -24,11 +24,25 @@ and the gas price is 'gasPrice' * 'gasUsed'
 */
 
 class NFT {
-  constructor(type, id, address, name, dev_fee, num_owned) {
+  constructor(type, address, name, dev_fee, num_owned) {
+    this._type = type;
+    this._id = '';
     this._address = address;
     this._name = name;
     this._dev_fee = dev_fee;
     this._num_owned = num_owned;
+  }
+
+  set id(id) {
+    this._id = id;
+  }
+
+  get type() {
+    return this._type;
+  }
+
+  get id() {
+    return this._id;
   }
 
   get address() {
@@ -46,44 +60,55 @@ class NFT {
   get totalFee() {
     return this._dev_fee + 250;
   }
+
+  get numOwned() {
+    return this._num_owned;
+  }
 }
 
 const API_KEY = 'FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8';
 
-async function getERC721Token(address, contract_address) {
-  try {
-    var resp = await axios.get(
-      'https://api.etherscan.io/api',
-      {
-        headers: {
-          accept: "application/json",
-        },
-        params: {
-          module: 'account',
-          action: 'tokennfttx',
-          contractaddress: contract_address,
-          address: address,
-          sort: 'desc',
-          apikey: API_KEY
-        }
-      }
-    );
-  } catch (error) {
-    console.log('Error getting ERC721 token: ' + error);
-  }
+async function getERC721Token(address) {
+  let owned = await getCollection(address);
 
-  if (resp.data['status'] === '1') {
-    const hash = resp.data['result'][0]['hash'];
-    resp.data['result'].forEach((item) => {
-      // if there is another transaction for the same token
-      if (item['hash'] != hash) {
-        hash = item['hash'];
+  owned.forEach((token) => {
+    setInterval(() => {
+      try {
+        var resp = await axios.get(
+          'https://api.etherscan.io/api',
+          {
+            headers: {
+              accept: "application/json",
+            },
+            params: {
+              module: 'account',
+              action: 'tokennfttx',
+              contractaddress: contract_address,
+              address: address,
+              sort: 'desc',
+              apikey: API_KEY
+            }
+          }
+        );
+      } catch (error) {
+        console.log('Error getting ERC721 token: ' + error);
       }
 
-    });
-  } else {
-    console.log(resp.data['message']);
-  }
+      if (resp.data['status'] === '1') {
+        const hash = resp.data['result'][0]['hash'];
+        resp.data['result'].forEach((item) => {
+          // if there is another transaction for the same token
+          if (item['hash'] != hash) {
+            hash = item['hash'];
+          }
+
+        });
+      } else {
+        console.log(resp.data['message']);
+      }
+    }, 5000);
+  });
+
 }
 
 async function getTransactions(address) {
@@ -140,6 +165,7 @@ async function getCollection(address) {
     if (item["primary_asset_contracts"].length !== 0) {
       const current = item["primary_asset_contracts"][0];
       const nft = new NFT(
+        current['schema_name'],
         current["address"],
         current["name"],
         current["dev_seller_fee_basis_points"],
