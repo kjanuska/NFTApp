@@ -7,11 +7,17 @@ GET COST OF MINTING COLLECTION
 
 1. use opensea api to get collection and the contract address of each nft
 in the collection
+"Get Collection"
 
-2. crawl through transaction list from etherscan and check if contract addy
-in transaction matches the addy from opensea
+2. get ERC-721 token info from etherscan, which gives the transaction hash.
+there might be multiple hashes if a person mined the same token at different times.
+"Get ERC271 Tokens"
 
-3. if yes, check if not error. then, 'value' is the mint price (if not 0)
+3. crawl through entire transaction list to find transaction that matches the hash
+received in the previous step.
+"Get Transaction List"
+
+3. if transaction foudn, check if not error. then, 'value' is the mint price
 and the gas price is 'gasPrice' * 'gasUsed' divided by something like 10^17
 */
 
