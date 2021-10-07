@@ -18,7 +18,9 @@ received in the previous step.
 "Get Transaction List"
 
 3. if transaction foudn, check if not error. then, 'value' is the mint price
-and the gas price is 'gasPrice' * 'gasUsed' divided by something like 10^17
+and the gas price is 'gasPrice' * 'gasUsed'
+1 eth = 10^18 wei
+1 gwei = 10^9 wei
 */
 
 class NFT {
