@@ -24,10 +24,11 @@ and the gas price is 'gasPrice' * 'gasUsed'
 */
 
 class NFT {
-  constructor(address, name, dev_fee) {
+  constructor(type, id, address, name, dev_fee, num_owned) {
     this._address = address;
     this._name = name;
     this._dev_fee = dev_fee;
+    this._num_owned = num_owned;
   }
 
   get address() {
@@ -47,6 +48,44 @@ class NFT {
   }
 }
 
+const API_KEY = 'FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8';
+
+async function getERC721Token(address, contract_address) {
+  try {
+    var resp = await axios.get(
+      'https://api.etherscan.io/api',
+      {
+        headers: {
+          accept: "application/json",
+        },
+        params: {
+          module: 'account',
+          action: 'tokennfttx',
+          contractaddress: contract_address,
+          address: address,
+          sort: 'desc',
+          apikey: API_KEY
+        }
+      }
+    );
+  } catch (error) {
+    console.log('Error getting ERC721 token: ' + error);
+  }
+
+  if (resp.data['status'] === '1') {
+    const hash = resp.data['result'][0]['hash'];
+    resp.data['result'].forEach((item) => {
+      // if there is another transaction for the same token
+      if (item['hash'] != hash) {
+        hash = item['hash'];
+      }
+
+    });
+  } else {
+    console.log(resp.data['message']);
+  }
+}
+
 async function getTransactions(address) {
   try {
     var resp = await axios.get("https://api.etherscan.io/api", {
@@ -60,7 +99,7 @@ async function getTransactions(address) {
         startblock: 0,
         endblock: 99999999,
         sort: 'desc',
-        apikey: 'FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8',
+        apikey: API_KEY,
       },
     });
   } catch (error) {
@@ -103,7 +142,8 @@ async function getCollection(address) {
       const nft = new NFT(
         current["address"],
         current["name"],
-        current["dev_seller_fee_basis_points"]
+        current["dev_seller_fee_basis_points"],
+        current["owned_asset_count"],
       );
       owned.push(nft);
     }
