@@ -24,17 +24,22 @@ and the gas price is 'gasPrice' * 'gasUsed'
 */
 
 class NFT {
-  constructor(type, address, name, dev_fee, num_owned) {
+  constructor(type, address, name, id, dev_fee) {
     this._type = type;
-    this._id = '';
     this._address = address;
     this._name = name;
-    this._dev_fee = dev_fee;
-    this._num_owned = num_owned;
+    this._id = parseInt(id);
+    this._dev_fee = parseFloat(dev_fee);
+    this._mint = 0.0;
+    this._gas = 0.0;
   }
 
-  set id(id) {
-    this._id = id;
+  set mint(mint) {
+    this._mint = mint;
+  }
+
+  set gas(gas) {
+    this._gas = gas;
   }
 
   get type() {
@@ -60,70 +65,61 @@ class NFT {
   get totalFee() {
     return this._dev_fee + 250;
   }
-
-  get numOwned() {
-    return this._num_owned;
-  }
 }
 
-const API_KEY = 'FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8';
+const API_KEY = "FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8";
 
-async function getERC721Token(address) {
-  let owned = await getCollection(address);
+async function getPrice(address) {
+  let collection = await getCollection(address);
 
-  owned.forEach((token) => {
-    setInterval(() => {
+  collection.forEach((token) => {
+    setTimeout(() => {
       try {
-        var resp = await axios.get(
-          'https://api.etherscan.io/api',
-          {
-            headers: {
-              accept: "application/json",
-            },
-            params: {
-              module: 'account',
-              action: 'tokennfttx',
-              contractaddress: contract_address,
-              address: address,
-              sort: 'desc',
-              apikey: API_KEY
-            }
-          }
-        );
+        var resp = await axios.get("https://api.etherscan.io/api", {
+          headers: {
+            accept: "application/json",
+          },
+          params: {
+            module: "account",
+            action: "tokennfttx",
+            contractaddress: token.address,
+            address: address,
+            sort: "desc",
+            apikey: API_KEY,
+          },
+        });
       } catch (error) {
-        console.log('Error getting ERC721 token: ' + error);
+        console.log("Error getting ERC721 token: " + error);
       }
 
-      if (resp.data['status'] === '1') {
-        const hash = resp.data['result'][0]['hash'];
-        resp.data['result'].forEach((item) => {
+      if (resp.data["status"] === "1") {
+        const hash = resp.data["result"][0]["hash"];
+        resp.data["result"].forEach((item) => {
+          const gas_price = parseFloat(item['gasPrice']);
+          const gas_used = parseFloat(item['gasUsed']);
+          const gas_price = (gas_price * gas_used) / Math.pow(10, 9);
           // if there is another transaction for the same token
-          if (item['hash'] != hash) {
-            hash = item['hash'];
-          }
-
         });
       } else {
-        console.log(resp.data['message']);
+        console.log(resp.data["message"]);
       }
-    }, 5000);
+    }, 500);
   });
-
 }
 
-async function getTransactions(address) {
+async function getMintPrice(address, block) {
   try {
     var resp = await axios.get("https://api.etherscan.io/api", {
       headers: {
         accept: "application/json",
       },
       params: {
-        module: 'account',
-        action: 'txlist',
+        module: "account",
+        action: "txlist",
         address: address,
         startblock: 0,
         endblock: 99999999,
-        sort: 'desc',
+        sort: "desc",
         apikey: API_KEY,
       },
     });
@@ -132,17 +128,53 @@ async function getTransactions(address) {
   }
 
   let owned = await getCollection(address);
-  if (resp.data['status'] === '1') {
-    owned.forEach((nft) => {
-      resp.data['result'].forEach((transaction) => {
-        if (transaction['to'] == nft.address) {
-          console.log(`${nft.name} - mint: ${transaction['value']}`);
-        }
+  if (resp.data["status"] === "1") {
+    owned.forEach((addy) => {
+      resp.data["result"].forEach((transaction) => {
+
       });
     });
+  } else {
+    console.log(resp.data['message']);
   }
 }
 
+// get all nft info for each address in collection
+async function getAsset(address) {
+  let addresses = await getCollection(address);
+
+  let collection = [];
+  addresses.forEach((addy) => {
+    try {
+      var resp = await axios.get("https://api.opensea.io/api/v1/assets", {
+        headers: {
+          accept: "application/json",
+        },
+        params: {
+          ownder: address,
+          asset_contract_address: addy,
+        },
+      });
+    } catch (error) {
+      console.log("Error getting token info: " + error);
+    }
+
+    resp.data["assets"].forEach((token) => {
+      const nft = new NFT(
+        token["asset_contract"]["schema_name"],
+        addy,
+        token["asset_contract"]["name"],
+        token["token_id"],
+        token["asset_contract"]["dev_seller_fee_basis_points"]
+      );
+      collection.push(nft);
+    });
+  });
+
+  return collection;
+}
+
+// get the contract addresses of each item in collection
 async function getCollection(address) {
   try {
     var resp = await axios.get("https://api.opensea.io/api/v1/collections", {
@@ -159,23 +191,15 @@ async function getCollection(address) {
     console.log("Error getting collection: " + error);
   }
 
-  let owned = [];
+  let collection_addresses = [];
 
   Object.values(resp.data).forEach((item) => {
     if (item["primary_asset_contracts"].length !== 0) {
-      const current = item["primary_asset_contracts"][0];
-      const nft = new NFT(
-        current['schema_name'],
-        current["address"],
-        current["name"],
-        current["dev_seller_fee_basis_points"],
-        current["owned_asset_count"],
-      );
-      owned.push(nft);
+      collection_addresses.push(item["primary_asset_contracts"][0]["address"]);
     }
   });
 
-  return owned;
+  return collection_addresses;
 }
 
 async function getActivity(address, event_type = null) {
