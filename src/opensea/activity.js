@@ -58,49 +58,105 @@ class Collection {
   get totalFee() {
     return this._dev_fee + 250;
   }
+
+  addTransaction(transaction) {
+    this._transactions.push(transaction);
+  }
+
+  get latestTransactionHash() {
+    return (this._transactions.length != 0) ? this._transactions.at(-1).hash : "NA";
+  }
+
+  get latestTransaction() {
+    return this._transactions.at(-1);
+  }
+}
+
+class Transaction {
+  constructor(hash, block_number) {
+    this._hash = hash;
+    this._block_number = block_number;
+    this._token_ids = [];
+    this._gas_price = 0;
+    this._gas_used = 0;
+    this._mint_cost = 0;
+  }
+
+  addID(id) {
+    this._token_ids.push(id);
+  }
+
+  set gasPrice(price) {
+    this._gas_price = price;
+  }
+
+  set gasUsed(amount) {
+    this._gas_used = amount;
+  }
+
+  set mintCost(price) {
+    this._mint_cost = price;
+  }
+
+  get hash(){
+    return this._hash;
+  }
+
+  get blockNumber(){
+    return this._block_number;
+  }
 }
 
 const API_KEY = "FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8";
 
 const ADDRESS = "0xd77220D15cB1F3A69d54Ae3bF6497D54510f08Bf";
 
-// async function getPrice() {
-//   let collection = await getCollection();
+async function getTransactions() {
+  const collection = await getEntireCollection();
+  let i = 0;
+  collection.forEach(async(token_collection, token_address) => {
+    if (token_collection.type === "ERC1155") return;
+    ++i
+    setTimeout(async() => {
+      try {
+        var resp = await axios.get("https://api.etherscan.io/api", {
+          headers: {
+            accept: "application/json",
+          },
+          params: {
+            module: "account",
+            action: "tokennfttx",
+            contractaddress: token_address,
+            address: ADDRESS,
+            sort: "desc",
+            apikey: API_KEY,
+          },
+        });
+      } catch (error) {
+        console.log("Error getting ERC721 token: " + error);
+      }
 
-//   collection.forEach((token) => {
-//     setTimeout(() => {
-//       try {
-//         var resp = await axios.get("https://api.etherscan.io/api", {
-//           headers: {
-//             accept: "application/json",
-//           },
-//           params: {
-//             module: "account",
-//             action: "tokennfttx",
-//             contractaddress: token.address,
-//             address: ADDRESS,
-//             sort: "desc",
-//             apikey: API_KEY,
-//           },
-//         });
-//       } catch (error) {
-//         console.log("Error getting ERC721 token: " + error);
-//       }
-
-//       if (resp.data["status"] === "1") {
-//         const hash = resp.data["result"][0]["hash"];
-//         resp.data["result"].forEach((item) => {
-//           const gas_price = parseFloat(item['gasPrice']);
-//           const gas_used = parseFloat(item['gasUsed']);
-//           const gas_price = (gas_price * gas_used) / Math.pow(10, 9);
-//           // if there is another transaction for the same token
-//         });
-//       } else {
-//         console.log(resp.data["message"]);
-//       }
-//     }, 500);
-//   });
-// }
+      if (resp.data["status"] === "1") {
+        Object.values(resp.data).forEach((token) => {
+          // if the token is part of an existing transaction
+          if (token_collection.latestTransactionHash === token["hash"]) {
+            token_collection.latestTransaction.addID(token['tokenID']);
+          // if the token is part of another, new transaction
+          } else {
+            const new_transaction = new Transaction(token['hash'], token['blockNumber']);
+            new_transaction.addID(token['tokenID']);
+            token_collection.addTransaction(new_transaction);
+          }
+        });
+      } else {
+        if (resp.data["message"] === "No transactions found") {
+          console.log("No transactions found for " + token_address);
+        }
+        console.log("Error with etherscan transaction list: " + resp.data["message"]);
+      }
+    }, 500 * i);
+  });
+}
 
 // async function getMintPrice(address, block) {
 //   try {
@@ -186,7 +242,7 @@ async function getEntireCollection() {
     console.log("Error getting collection: " + error);
   }
 
-  let collection = new Map();
+  const collection = new Map();
 
   Object.values(resp.data).forEach((item) => {
     if (item["primary_asset_contracts"].length !== 0) {
@@ -221,6 +277,6 @@ async function getActivity(address, event_type = null) {
   return resp.data;
 }
 
-getEntireCollection();
+getTransactions();
 
 module.exports = { getActivity };
