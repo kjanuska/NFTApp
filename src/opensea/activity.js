@@ -70,6 +70,10 @@ class Collection {
   get latestTransaction() {
     return this._transactions.at(-1);
   }
+
+  get transactions() {
+    return this._transactions;
+  }
 }
 
 class Transaction {
@@ -86,16 +90,16 @@ class Transaction {
     this._token_ids.push(id);
   }
 
-  set gasPrice(price) {
-    this._gas_price = price;
-  }
-
   set gasUsed(amount) {
     this._gas_used = amount;
   }
 
   set mintCost(price) {
     this._mint_cost = price;
+  }
+
+  set gasPrice(price) {
+    this._gas_price = price;
   }
 
   get hash(){
@@ -105,14 +109,44 @@ class Transaction {
   get blockNumber(){
     return this._block_number;
   }
+
+  get mint() {
+    return this._mint_cost / Math.pow(10, 18);
+  }
 }
 
 const API_KEY = "FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8";
 
 const ADDRESS = "0xd77220D15cB1F3A69d54Ae3bF6497D54510f08Bf";
 
-async function getTransactions() {
-  const collection = await getEntireCollection();
+async function getPrices() {
+  // get collection
+  const collection = new Map();
+  try {
+    var resp = await axios.get("https://api.opensea.io/api/v1/collections", {
+      headers: {
+        accept: "application/json",
+      },
+      params: {
+        asset_owner: ADDRESS,
+        offset: 0,
+        limit: 300,
+      },
+    });
+  } catch (error) {
+    console.log("Error getting collection: " + error);
+  }
+
+  Object.values(resp.data).forEach((item) => {
+    if (item["primary_asset_contracts"].length !== 0) {
+      const new_nft = new Collection(item["primary_asset_contracts"][0]["schema_name"],
+                                 item["name"],
+                                 item["primary_asset_contracts"][0]["dev_seller_fee_basis_points"])
+      collection.set(item["primary_asset_contracts"][0]["address"], new_nft);
+    }
+  });
+  
+  // get transactions
   let i = 0;
   collection.forEach(async(token_collection, token_address) => {
     if (token_collection.type === "ERC1155") return;
@@ -156,104 +190,47 @@ async function getTransactions() {
       }
     }, 500 * i);
   });
-}
 
-// async function getMintPrice(address, block) {
-//   try {
-//     var resp = await axios.get("https://api.etherscan.io/api", {
-//       headers: {
-//         accept: "application/json",
-//       },
-//       params: {
-//         module: "account",
-//         action: "txlist",
-//         address: address,
-//         startblock: 0,
-//         endblock: 99999999,
-//         sort: "desc",
-//         apikey: API_KEY,
-//       },
-//     });
-//   } catch (error) {
-//     console.log("Erorr getting transaction list: " + error);
-//   }
-
-//   let owned = await getCollection(address);
-//   if (resp.data["status"] === "1") {
-//     owned.forEach((addy) => {
-//       resp.data["result"].forEach((transaction) => {
-
-//       });
-//     });
-//   } else {
-//     console.log(resp.data['message']);
-//   }
-// }
-
-// get all nft info for each address in collection
-// async function getAsset(address) {
-//   let addresses = await getCollection(address);
-
-//   let collection = [];
-//   addresses.forEach((addy) => {
-//     try {
-//       var resp = await axios.get("https://api.opensea.io/api/v1/assets", {
-//         headers: {
-//           accept: "application/json",
-//         },
-//         params: {
-//           ownder: address,
-//           asset_contract_address: addy,
-//         },
-//       });
-//     } catch (error) {
-//       console.log("Error getting token info: " + error);
-//     }
-
-//     resp.data["assets"].forEach((token) => {
-//       const nft = new NFT(
-//         token["asset_contract"]["schema_name"],
-//         addy,
-//         token["asset_contract"]["name"],
-//         token["token_id"],
-//         token["asset_contract"]["dev_seller_fee_basis_points"]
-//       );
-//       collection.push(nft);
-//     });
-//   });
-
-//   return collection;
-// }
-
-// get the contract addresses of each item in collection
-async function getEntireCollection() {
-  try {
-    var resp = await axios.get("https://api.opensea.io/api/v1/collections", {
-      headers: {
-        accept: "application/json",
-      },
-      params: {
-        asset_owner: ADDRESS,
-        offset: 0,
-        limit: 300,
-      },
+  // get prices
+  collection.forEach(async(token_collection, token_address) => {
+    let i = 0;
+    token_collection.transactions.forEach((transaction) => {
+      ++i
+      setTimeout(async() => {
+        try {
+          var resp = await axios.get("https://api.etherscan.io/api", {
+            headers: {
+              accept: "application/json",
+            },
+            params: {
+              module: "account",
+              action: "txlist",
+              address: address,
+              startblock: transaction.blockNumber,
+              endblock: transaction.blockNumber,
+              sort: "desc",
+              apikey: API_KEY,
+            },
+          });
+        } catch (error) {
+          console.log("Erorr getting transaction list: " + error);
+        }
+    
+        if (resp.data["status"] === "1") {
+          if (resp.data["result"][0]["hash"] === transaction.hash) {
+            transaction.gasPrice = resp.data["result"][0]["gasPrice"];
+            transaction.gasUsed = resp.data["result"][0]["gasUsed"];
+            transaction.mintCost = resp.data["result"][0]["value"];
+          } else {
+            console.log("Uhh... transaction hash doesn't match");
+          }
+        } else {
+          console.log(resp.data['message']);
+        }
+        }, 500 * i);
+      });
     });
-  } catch (error) {
-    console.log("Error getting collection: " + error);
-  }
-
-  const collection = new Map();
-
-  Object.values(resp.data).forEach((item) => {
-    if (item["primary_asset_contracts"].length !== 0) {
-      const new_nft = new Collection(item["primary_asset_contracts"][0]["schema_name"],
-                                 item["name"],
-                                 item["primary_asset_contracts"][0]["dev_seller_fee_basis_points"])
-      collection.set(item["primary_asset_contracts"][0]["address"], new_nft);
-    }
-  });
-
-  return collection;
+    return collection;
 }
 
 async function getActivity(address, event_type = null) {
@@ -273,10 +250,7 @@ async function getActivity(address, event_type = null) {
   } catch (error) {
     console.log(error);
   }
-
   return resp.data;
 }
 
-getTransactions();
-
-module.exports = { getActivity };
+module.exports = { getPrices };
