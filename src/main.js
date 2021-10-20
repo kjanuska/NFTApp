@@ -1,5 +1,6 @@
 const { app, ipcMain, BrowserWindow } = require('electron');
 const path = require('path');
+const sqlite3 = require('sqlite3');
 
 // module for storing data
 const Store = require('electron-store');
@@ -10,6 +11,10 @@ const schema = {
   }
 }
 const store = new Store({schema});
+
+const database = new sqlite3.Database('./public/db.sqlite3', (err) => {
+  if (err) console.error('Database opening error: ', err);
+});
 
 // custom node modules for scraping
 const { getActivity } = require('./opensea/activity');
