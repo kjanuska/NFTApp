@@ -1,6 +1,6 @@
 const { app, ipcMain, BrowserWindow } = require('electron');
 const path = require('path');
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('better-sqlite3');
 
 // module for storing data
 const Store = require('electron-store');
@@ -17,7 +17,7 @@ const database = new sqlite3.Database('./public/db.sqlite3', (err) => {
 });
 
 // custom node modules for scraping
-const { getActivity } = require('./opensea/activity');
+const { getPrices } = require('./opensea/activity');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -84,7 +84,7 @@ ipcMain.handle('get-address', async (event) => {
 });
 
 ipcMain.on('fetch-data', async (event, address) => {
-  const resp = await getActivity(address);
+  const resp = await getPrices(address);
   console.log(resp);
   mainWindow.webContents.send('from-main', resp);
 });

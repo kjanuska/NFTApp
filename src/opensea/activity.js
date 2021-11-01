@@ -1,4 +1,6 @@
 const axios = require("axios");
+const https = require('https');
+require('dotenv').config();
 
 // https://docs.opensea.io/reference/retrieving-asset-events
 
@@ -115,12 +117,13 @@ class Transaction {
   }
 }
 
-const API_KEY = "FDBB85H7HTFKGVEQ68XV9CPHK4GG6Z2GF8";
+const API_KEY = process.env.ETHERSCAN_API_KEY;
 
-const ADDRESS = "0xd77220D15cB1F3A69d54Ae3bF6497D54510f08Bf";
-
-async function getPrices() {
+async function getPrices(address) {
   // get collection
+  const agent = new https.Agent({
+    rejectUnauthorized: false
+  });
   const collection = new Map();
   try {
     var resp = await axios.get("https://api.opensea.io/api/v1/collections", {
@@ -128,13 +131,14 @@ async function getPrices() {
         accept: "application/json",
       },
       params: {
-        asset_owner: ADDRESS,
+        asset_owner: address,
         offset: 0,
         limit: 300,
       },
+      httpsAgent: agent
     });
   } catch (error) {
-    console.log("Error getting collection: " + error);
+    console.log("Error getting Opensea collection: " + error);
   }
 
   Object.values(resp.data).forEach((item) => {
@@ -161,10 +165,11 @@ async function getPrices() {
             module: "account",
             action: "tokennfttx",
             contractaddress: token_address,
-            address: ADDRESS,
+            address: address,
             sort: "desc",
             apikey: API_KEY,
           },
+          httpsAgent: agent
         });
       } catch (error) {
         console.log("Error getting ERC721 token: " + error);
@@ -211,6 +216,7 @@ async function getPrices() {
               sort: "desc",
               apikey: API_KEY,
             },
+            httpsAgent: agent
           });
         } catch (error) {
           console.log("Erorr getting transaction list: " + error);
