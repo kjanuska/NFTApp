@@ -1,6 +1,6 @@
 const { app, ipcMain, BrowserWindow } = require('electron');
 const path = require('path');
-const sqlite3 = require('better-sqlite3');
+const sqlite3 = require('sqlite3');
 
 // module for storing data
 const Store = require('electron-store');
