@@ -17,7 +17,7 @@ const database = new sqlite3.Database('./public/db.sqlite3', (err) => {
 });
 
 // custom node modules for scraping
-const { getPrices } = require('./opensea/activity');
+const { getActivity } = require('./opensea/activity');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -84,7 +84,7 @@ ipcMain.handle('get-address', async (event) => {
 });
 
 ipcMain.on('fetch-data', async (event, address) => {
-  const resp = await getPrices(address);
+  const resp = await getActivity(address);
   console.log(resp);
   mainWindow.webContents.send('from-main', resp);
 });
